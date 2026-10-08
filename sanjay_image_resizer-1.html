@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanjay Image Resizer</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172033}
+header{background:#2563eb;color:white;text-align:center;padding:28px 15px}
+header h1{margin:0 0 8px;font-size:30px}
+header p{margin:0;opacity:.9}
+.container{max-width:850px;margin:30px auto;padding:0 16px}
+.card{background:white;border-radius:18px;padding:24px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.upload{border:2px dashed #93b4f7;border-radius:14px;padding:35px;text-align:center;background:#f8fbff}
+.upload input{margin-top:15px}
+.preview{text-align:center;margin:25px 0}
+.preview img{max-width:100%;max-height:380px;border-radius:10px;display:none;margin:auto}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+label{font-weight:bold;display:block;margin-bottom:7px}
+input[type=number]{width:100%;padding:12px;border:1px solid #ccd5e3;border-radius:9px;font-size:16px}
+.ratio{margin:18px 0}
+button{border:0;border-radius:10px;padding:13px 20px;font-size:16px;font-weight:bold;cursor:pointer}
+#resizeBtn{background:#2563eb;color:white;width:100%;margin-top:18px}
+#downloadBtn{background:#16a34a;color:white;width:100%;margin-top:12px;display:none}
+.info{text-align:center;margin-top:20px;color:#64748b;font-size:14px}
+@media(max-width:600px){.controls{grid-template-columns:1fr}.card{padding:18px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🖼️ Sanjay Image Resizer</h1>
+<p>Resize your images quickly and easily</p>
+</header>
+
+<div class="container">
+<div class="card">
+<div class="upload">
+<h2>Select an Image</h2>
+<p>Choose a JPG, PNG or WebP image</p>
+<input id="fileInput" type="file" accept="image/*">
+</div>
+
+<div class="preview">
+<img id="preview" alt="Image preview">
+</div>
+
+<div class="controls">
+<div>
+<label for="width">Width (px)</label>
+<input id="width" type="number" min="1" placeholder="Width">
+</div>
+<div>
+<label for="height">Height (px)</label>
+<input id="height" type="number" min="1" placeholder="Height">
+</div>
+</div>
+
+<div class="ratio">
+<label><input id="lockRatio" type="checkbox" checked> Lock aspect ratio</label>
+</div>
+
+<button id="resizeBtn">🔄 Resize Image</button>
+<button id="downloadBtn">⬇️ Download Resized Image</button>
+
+<p class="info">Your image is processed in your browser. It is not uploaded to a server.</p>
+</div>
+</div>
+
+<script>
+const fileInput=document.getElementById('fileInput');
+const preview=document.getElementById('preview');
+const widthInput=document.getElementById('width');
+const heightInput=document.getElementById('height');
+const lockRatio=document.getElementById('lockRatio');
+const resizeBtn=document.getElementById('resizeBtn');
+const downloadBtn=document.getElementById('downloadBtn');
+
+let img=new Image(), ratio=1, resizedData=null;
+
+fileInput.addEventListener('change',()=>{
+  const file=fileInput.files[0];
+  if(!file)return;
+  const url=URL.createObjectURL(file);
+  img.onload=()=>{
+    ratio=img.width/img.height;
+    widthInput.value=img.width;
+    heightInput.value=img.height;
+    preview.src=url;
+    preview.style.display='block';
+    downloadBtn.style.display='none';
+  };
+  img.src=url;
+});
+
+widthInput.addEventListener('input',()=>{
+  if(lockRatio.checked && img.height){
+    heightInput.value=Math.round(widthInput.value/ratio);
+  }
+});
+heightInput.addEventListener('input',()=>{
+  if(lockRatio.checked && img.width){
+    widthInput.value=Math.round(heightInput.value*ratio);
+  }
+});
+
+resizeBtn.addEventListener('click',()=>{
+  if(!fileInput.files[0]){alert('Please select an image first.');return;}
+  const w=parseInt(widthInput.value), h=parseInt(heightInput.value);
+  if(!w||!h||w<1||h<1){alert('Please enter valid width and height.');return;}
+
+  const canvas=document.createElement('canvas');
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(img,0,0,w,h);
+  resizedData=canvas.toDataURL(fileInput.files[0].type || 'image/png', .92);
+
+  preview.src=resizedData;
+  downloadBtn.style.display='block';
+});
+
+downloadBtn.addEventListener('click',()=>{
+  if(!resizedData)return;
+  const a=document.createElement('a');
+  a.href=resizedData;
+  a.download='sanjay-resized-image.png';
+  a.click();
+});
+</script>
+</body>
+</html>
